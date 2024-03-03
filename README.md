@@ -3,7 +3,6 @@
 **Julien REIG - Justine BARTHELME**
 
 
-
 ## Lancez le programme
 
 1. Lancer le broker kafka: `docker-compose up -d`
@@ -12,6 +11,14 @@
 4. Installer les dépendances: `pip install -r requirements.txt`
 5. Lancer le producer: `python3 producer.py`
 6. Dans un autre terminal, lancer le consumer: `python3 consumer.py`
+
+## Le projet
+
+Le programme permet de streamer l'API Mastodon, une API pour le réseau social Mastodon,
+avec Kafka.
+Le fichier producer-stream_thread.py sert à fetcher les données pour le TAG donné pour les envoyer en boucle à Kafka.
+Le fichier consume_thread.py permet de lire dans les threads pour pouvoir traiter les données. Le programme ici permet de trouver les threads produits par 6 d'intervalles avec un chevauchement sur 30 minutes, ensuite, on sauvegarde ces données dans un fichier csv (dans /unique_output/).
+
 
 ## Question bonus
 

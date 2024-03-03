@@ -1,19 +1,21 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, from_json, row_number, window
+from pyspark.sql.functions import col, from_json, window
 from pyspark.sql.session import SparkSession
-from pyspark.sql.types import (DateType, LongType, StructField, StringType,TimestampType,
+from pyspark.sql.types import (StructField, StringType,TimestampType,
                                StructType)
 
 # Configuration du consommateur Kafka
 KAFKA_BROKER_URL = "localhost:9092"
 TOPIC_NAME = "IA"
 
+# Initialisation de Spark
 builder: SparkSession.Builder = SparkSession.builder
 spark: SparkSession = builder \
     .appName("TP Note") \
     .config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0') \
     .getOrCreate()
 
+# On lit les données dans Kafka avec le tag et on a un dataframe
 df: DataFrame = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_BROKER_URL) \
@@ -21,16 +23,20 @@ df: DataFrame = spark.readStream \
     .option("failOnDataLoss", "false") \
     .load()
 
+# Structure pour parser les données du dataframe
 schema = StructType([
     StructField("id", StringType(), True),
     StructField("date", TimestampType(), True)
 ])
 
+# On transforme le json pour lui donner la structure du json schema
 df = df.withColumn(
     "value",
     from_json(col("value").cast("string"), schema)
 )
+# On modifie pour ne garder que les valeurs qui nous intéressent
 df = df.select(col("value.*"))
+# Condition des 6 heures et 30 minutes
 window_spec = window("date", "6 hours", "30 minutes") 
 
 df = df.withColumn("range_start", window_spec.start)
